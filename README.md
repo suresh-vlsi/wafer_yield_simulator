@@ -1,867 +1,476 @@
-# Linear Regression & Optimization from Scratch
+# Wafer Yield Simulator
 
-A from-scratch implementation and mathematical study of **Linear
-Regression, Gradient Descent, Gradient Checking, Loss Surfaces,
-Learning-Rate Stability, Feature Scaling, Momentum, Nesterov Accelerated
-Gradient, AdaGrad, RMSProp, and Adam**.
+An interactive web-based **semiconductor wafer yield simulator** for
+visualizing wafer-level die testing, pass/fail classification, yield
+calculation, test sequencing, and tester-speed control.
 
-## Learning Path
+## Overview
+
+A semiconductor wafer contains many individual dies. Manufacturing
+defects can cause some dies to fail testing. This project provides an
+interactive browser-based model of that process.
 
 ``` text
-Linear Regression
+Wafer Parameters
        |
        v
-Loss Function
+   Die Generation
        |
        v
-Gradient
+   Die Testing
        |
        v
-Gradient Descent
+ Pass / Fail Classification
        |
        v
-Learning Rate
+   Yield Calculation
        |
        v
-Hessian + Stability
-       |
-       v
-Feature Scaling
-       |
-       v
-Momentum
-       |
-       v
-Nesterov
-       |
-       v
-AdaGrad
-       |
-       v
-RMSProp
-       |
-       v
-Adam
+ Interactive Visualization
 ```
 
-## 1. Project Overview
+The project is intended for educational and portfolio use in VLSI,
+semiconductor manufacturing, IC testing, and yield analysis.
 
-This project studies Linear Regression and optimization from first
-principles. The core algorithms are implemented directly using Python
-and NumPy rather than treating optimizers as black boxes.
+------------------------------------------------------------------------
 
-The project connects:
+## Features
 
--   Linear algebra
--   Multivariable calculus
--   Numerical optimization
--   Numerical stability
--   Machine learning
+### Interactive Wafer Visualization
 
-## 2. Learning Objectives
+The simulator displays individual dies across a wafer and provides
+visual feedback as testing progresses.
 
--   Understand Linear Regression mathematically.
--   Implement Mean Squared Error manually.
--   Derive and implement analytical gradients.
--   Implement Gradient Descent from scratch.
--   Visualize loss surfaces and optimization trajectories.
--   Verify gradients numerically.
--   Study learning-rate effects and stability.
--   Understand Hessian curvature and eigenvalues.
--   Understand feature scaling and conditioning.
--   Implement Momentum and Nesterov.
--   Implement AdaGrad, RMSProp, and Adam.
--   Compare optimization methods experimentally.
+### Die-Level Testing
 
-## 3. Linear Regression
+Dies are processed individually and classified according to the
+simulator’s test/bin data and logic.
 
-The model is:
+### Yield Calculation
 
-\[ `\boxed{\hat y=b_0+b_1x}`{=tex} \]
+The observed test yield is represented by:
 
-where `b0` is the intercept and `b1` is the slope.
+\[ Y = \]
 
-For parameters
+where:
 
-\[ `\theta`{=tex}=
-```{=tex}
-\begin{bmatrix}
-b_0\\
-b_1
-\end{bmatrix}
+- `N_good` = number of passing dies
+- `N_tested` = number of tested dies
+- `Y` = observed yield percentage
+
+### Automatic Test Sequence
+
+The simulator can automatically progress through the wafer rather than
+requiring every test operation to be initiated manually.
+
+### Tester Velocity Control
+
+The interface includes a **Tester Velocity** control with:
+
+- Range: **0.5x to 5.0x**
+- Default: **2.5x**
+- Live velocity display
+- Automatic-test timing scaled with velocity
+- Higher velocity for faster testing
+- Lower velocity for observation and debugging
+
+Conceptually:
+
+\[ T\_{delay} \]
+
+where `T_delay` is the delay between test events and `V` is tester
+velocity.
+
+### Test/Classification Data
+
+The repository includes:
+
+``` text
+wafer_test_bins.csv
 ```
-\]
 
-the objective is to find parameters that minimize prediction error.
+for wafer test/bin data used by the project.
 
-## 4. Mean Squared Error
+------------------------------------------------------------------------
 
-The loss function is:
+## Repository Structure
 
-\[ `\boxed{
-J(b_0,b_1)=
-\frac{1}{n}
-\sum_{i=1}^{n}
-(\hat y_i-y_i)^2
-}`{=tex} \]
-
-Substituting the model:
-
-\[ `\boxed{
-J(b_0,b_1)=
-\frac{1}{n}
-\sum_{i=1}^{n}
-(b_0+b_1x_i-y_i)^2
-}`{=tex} \]
-
-The optimization problem is:
-
-\[ `\boxed{\min_{b_0,b_1}J(b_0,b_1)}`{=tex} \]
-
-## 5. Gradient
-
-The gradient is:
-
-\[ `\nabla `{=tex}J=
-```{=tex}
-\begin{bmatrix}
-\frac{\partial J}{\partial b_0}\\
-\frac{\partial J}{\partial b_1}
-\end{bmatrix}
+``` text
+wafer_yield_simulator/
+|
+|-- index.html
+|-- script.js
+|-- style.css
+|-- wafer_test_bins.csv
+|-- README.md
+`-- .gitignore
 ```
-\]
 
-with
+### `index.html`
 
-\[ `\boxed{
-\frac{\partial J}{\partial b_0}
-=
-\frac{2}{n}\sum(\hat y-y)
-}`{=tex} \]
+Defines the web interface and simulator page structure.
 
-and
+### `script.js`
 
-\[ `\boxed{
-\frac{\partial J}{\partial b_1}
-=
-\frac{2}{n}\sum(\hat y-y)x
-}`{=tex} \]
+Contains the simulator’s interactive behavior, test sequence,
+calculations, and UI logic.
 
-## 6. Gradient Descent
+### `style.css`
 
-The fundamental update is:
+Contains the visual styling and layout.
 
-\[ `\boxed{
-\theta_{t+1}
-=
-\theta_t-\alpha\nabla J(\theta_t)
-}`{=tex} \]
+### `wafer_test_bins.csv`
 
-where `alpha` is the learning rate.
+Contains wafer test/bin data used by the simulator.
 
-The gradient points toward increasing loss, so the negative gradient
-points toward decreasing loss:
+### `.gitignore`
 
-\[ `\boxed{
-\nabla J=\text{uphill},\qquad
--\nabla J=\text{downhill}
-}`{=tex} \]
+Prevents unwanted local and generated files from being committed.
 
-## 7. Loss Curves and Loss Surfaces
+------------------------------------------------------------------------
 
-The project visualizes:
+## How It Works
 
--   MSE versus iteration.
--   2D contour loss surfaces.
--   3D loss surfaces.
--   Gradient and negative-gradient vectors.
--   Parameter trajectories.
+### 1. Wafer Initialization
 
-The two-parameter loss is:
+The application creates the wafer/die visualization.
 
-\[ J=J(b_0,b_1) \]
+### 2. Die Testing
 
-The optimization path can therefore be observed directly in parameter
-space.
+The simulator processes dies according to its test sequence and data
+model.
 
-## 8. Gradient Checking
+### 3. Pass/Fail Classification
 
-The analytical gradient is verified using the central finite-difference
-approximation:
+Each tested die receives the corresponding simulated test result.
 
-\[ `\boxed{
-\frac{\partial J}{\partial\theta}
-\approx
-\frac{
-J(\theta+\epsilon)-J(\theta-\epsilon)
-}{
-2\epsilon
-}
-}`{=tex} \]
+### 4. Yield Calculation
 
-The goal is:
+The number of good and tested dies is tracked.
 
-\[ `\boxed{
-\nabla J_{analytical}
-\approx
-\nabla J_{numerical}
-}`{=tex} \]
-
-This provides an independent check of derivative implementations.
-
-## 9. Learning Rate
-
-The learning rate controls the size of each update.
-
-### Small learning rate
-
-Stable but potentially slow.
-
-### Appropriate learning rate
-
-Efficient convergence.
-
-### Large learning rate
-
-May cause:
-
--   Overshooting
--   Oscillation
--   Divergence
--   Very large loss
--   Numerical overflow
-
-Therefore:
-
-\[
-`\boxed{\text{Learning rate is a stability-critical hyperparameter}}`{=tex}
-\]
-
-## 10. Hessian
-
-The Hessian is:
-
-\[ `\boxed{H=\nabla^2J(\theta)}`{=tex} \]
-
-For the Linear Regression experiment, the Hessian was approximately:
-
-\[ H=
-```{=tex}
-\begin{bmatrix}
-2 & 7\\
-7 & 30.3333
-\end{bmatrix}
+``` text
+Yield (%) = Good Dies / Tested Dies x 100
 ```
-\]
 
-with eigenvalues approximately:
+### 5. Automatic Testing
 
-\[ `\lambda`{=tex}\_1`\approx0.3649`{=tex} \]
+The automatic sequence continues through the wafer. Tester velocity
+determines the timing between test events.
 
-\[ `\lambda`{=tex}\_2`\approx31.9684`{=tex} \]
+------------------------------------------------------------------------
 
-The largest eigenvalue determines the most restrictive curvature
-direction.
+## Example
 
-## 11. Stability Boundary
+If 100 dies are tested and 92 pass:
 
-For a quadratic objective, Gradient Descent is stable when:
-
-\[ `\boxed{
-0<\alpha<\frac{2}{\lambda_{max}}
-}`{=tex} \]
-
-Using:
-
-\[ `\lambda`{=tex}\_{max}`\approx31.9684`{=tex} \]
-
-gives:
-
-\[ `\boxed{\alpha<0.06256}`{=tex} \]
-
-The stability-boundary experiment verifies the relationship between
-Hessian curvature and maximum stable learning rate.
-
-## 12. Feature Scaling
-
-Standardization is:
-
-\[ `\boxed{
-x_{scaled}=\frac{x-\mu}{\sigma}
-}`{=tex} \]
-
-Feature scaling can make the optimization geometry better conditioned
-and can significantly improve convergence.
-
-The project visualizes the difference through loss curves and parameter
-trajectories.
-
-## 13. Parameter Trajectory
-
-The parameters are tracked as:
-
-\[ (b_0,b_1) \]
-
-at every iteration.
-
-This shows how the optimizer moves through parameter space rather than
-only showing whether the loss decreases.
-
-## 14. Momentum
-
-Momentum introduces a velocity term:
-
-\[ `\boxed{
-v_t=\beta v_{t-1}-\alpha g_t
-}`{=tex} \]
-
-followed by:
-
-\[ `\boxed{
-\theta_{t+1}=\theta_t+v_t
-}`{=tex} \]
-
-Momentum incorporates historical gradient information and can accelerate
-movement along consistent directions.
-
-## 15. Momentum Beta Experiment
-
-The coefficient `beta` controls how strongly previous velocity is
-retained.
-
-Values explored include:
-
-\[ `\beta=0`{=tex},;0.5,;0.9,;0.99 \]
-
-When:
-
-\[ `\beta=0`{=tex} \]
-
-the method reduces to ordinary Gradient Descent.
-
-Large momentum can also produce oscillations or overshooting depending
-on the learning rate and curvature.
-
-## 16. Nesterov Accelerated Gradient
-
-Nesterov first evaluates a look-ahead position:
-
-\[ `\boxed{
-\theta_{lookahead}
-=
-\theta_t+\beta v_t
-}`{=tex} \]
+``` text
+Good dies   = 92
+Failed dies = 8
+Tested dies = 100
+```
 
 Then:
 
-\[ `\boxed{
-g_t=\nabla J(\theta_{lookahead})
-}`{=tex} \]
+\[ Y = = 92% \]
 
-followed by:
+The observed test yield is therefore **92%**.
 
-\[ `\boxed{
-v_{t+1}=\beta v_t-\alpha g_t
-}`{=tex} \]
+------------------------------------------------------------------------
 
-and:
+## Semiconductor Yield Background
 
-\[ `\boxed{
-\theta_{t+1}=\theta_t+v_{t+1}
-}`{=tex} \]
+Yield is an important semiconductor manufacturing metric because
+fabricated dies can fail due to random defects, systematic defects,
+process variation, and other manufacturing effects.
 
-Conceptually:
+A simple observed-yield calculation is:
 
-``` text
-Current position
-      |
-      v
-Predict momentum movement
-      |
-      v
-Look ahead
-      |
-      v
-Calculate gradient
-      |
-      v
-Correct movement
-```
+\[ Y = \]
 
-## 17. AdaGrad
+or, as a percentage:
 
-AdaGrad accumulates squared gradients:
+\[ Y\_{%} = \]
 
-\[ `\boxed{
-G_t=G_{t-1}+g_t^2
-}`{=tex} \]
+Actual semiconductor yield analysis is more complex and can involve
+defect density, die area, critical area, spatial defect correlation,
+process variation, and different statistical yield models.
 
-and updates:
+This simulator is an educational model and is not intended to provide
+production semiconductor yield predictions.
 
-\[ `\boxed{
-\theta_{t+1}
-=
-\theta_t-
-\frac{\alpha}{\sqrt{G_t}+\epsilon}g_t
-}`{=tex} \]
+------------------------------------------------------------------------
 
-This creates parameter-specific adaptive learning rates.
+## Simple Defect-Density Model
 
-### Advantage
+A future analytical extension can use the simple Poisson yield
+relationship:
 
-Large or frequently occurring gradients receive progressively smaller
-effective updates.
+\[ Y = e^{-D_0 A} \]
 
-### Limitation
+where:
 
-The accumulator only grows, so the effective learning rate can
-eventually become extremely small.
+- `D_0` = defect density
+- `A` = die area
+- `Y` = predicted yield
 
-## 18. RMSProp
+This provides a useful way to study the relationship between die area,
+defect density, and yield.
 
-RMSProp uses an exponentially weighted average of squared gradients:
+------------------------------------------------------------------------
 
-\[ `\boxed{
-S_t=
-\beta S_{t-1}
-+
-(1-\beta)g_t^2
-}`{=tex} \]
-
-The update is:
-
-\[ `\boxed{
-\theta_{t+1}
-=
-\theta_t-
-\frac{\alpha}{\sqrt{S_t}+\epsilon}g_t
-}`{=tex} \]
-
-Unlike AdaGrad, old gradients gradually lose influence.
-
-## 19. Adam
-
-Adam combines momentum-like first-moment estimation with RMSProp-like
-second-moment estimation.
-
-First moment:
-
-\[ `\boxed{
-m_t=
-\beta_1m_{t-1}
-+
-(1-\beta_1)g_t
-}`{=tex} \]
-
-Second moment:
-
-\[ `\boxed{
-v_t=
-\beta_2v_{t-1}
-+
-(1-\beta_2)g_t^2
-}`{=tex} \]
-
-Bias correction:
-
-\[ `\boxed{
-\hat m_t=
-\frac{m_t}{1-\beta_1^t}
-}`{=tex} \]
-
-\[ `\boxed{
-\hat v_t=
-\frac{v_t}{1-\beta_2^t}
-}`{=tex} \]
-
-Final update:
-
-\[ `\boxed{
-\theta_{t+1}
-=
-\theta_t
--
-\alpha
-\frac{\hat m_t}
-{\sqrt{\hat v_t}+\epsilon}
-}`{=tex} \]
-
-Typical values:
-
-\[ `\beta`{=tex}\_1=0.9,`\qquad`{=tex}
-`\beta`{=tex}\_2=0.999,`\qquad`{=tex} `\epsilon=10`{=tex}\^{-8} \]
-
-## 20. Optimization Algorithm Comparison
-
-  Algorithm          Main Idea
-  ------------------ ------------------------------------------
-  Gradient Descent   Current gradient
-  Momentum           Gradient + velocity history
-  Nesterov           Momentum + look-ahead gradient
-  AdaGrad            Accumulated squared gradients
-  RMSProp            Moving average of squared gradients
-  Adam               First + second moments + bias correction
-
-Conceptually:
+## Project Workflow
 
 ``` text
-Gradient Descent
-      |
-      v
-Momentum
-      |
-      v
-Nesterov
-      |
-      +----------------+
-      |                |
-      v                v
-   AdaGrad          RMSProp
-      |                |
-      +-------+--------+
-              |
-              v
-             Adam
+             +----------------------+
+             |   Wafer Parameters   |
+             +----------+-----------+
+                        |
+                        v
+             +----------------------+
+             |    Generate Dies     |
+             +----------+-----------+
+                        |
+                        v
+             +----------------------+
+             |      Test Die        |
+             +----------+-----------+
+                        |
+                 +------+------+
+                 |             |
+                 v             v
+             +-------+     +-------+
+             | PASS  |     | FAIL  |
+             +---+---+     +---+---+
+                 |             |
+                 +------+------+
+                        |
+                        v
+             +----------------------+
+             |    Yield Analysis    |
+             +----------+-----------+
+                        |
+                        v
+             +----------------------+
+             | Wafer Visualization  |
+             +----------------------+
 ```
 
-The major ideas are:
+------------------------------------------------------------------------
 
-\[ `\boxed{\text{Momentum}\rightarrow\text{direction/history}}`{=tex} \]
+## Running Locally
 
-\[
-`\boxed{\text{AdaGrad/RMSProp}\rightarrow\text{adaptive step size}}`{=tex}
-\]
-
-\[
-`\boxed{\text{Adam}\rightarrow\text{direction + adaptive step size}}`{=tex}
-\]
-
-## 21. Project Structure
-
-``` text
-01_linear_regression/
-│
-├── README.md
-│
-├── linear_regression.py
-├── loss_surface.py
-├── loss_surface_3d.py
-├── gradient_vector.py
-├── gradient_check.py
-├── learning_rate_experiment.py
-├── hessian_analysis.py
-├── stability_boundary.py
-├── feature_scaling.py
-├── parameter_trajectory.py
-├── momentum_gradient_descent.py
-├── momentum_beta_experiment.py
-├── nesterov_momentum.py
-├── adagrad.py
-├── rmsprop.py
-└── adam.py
-```
-
-## 22. Requirements
-
--   Python 3.x
--   NumPy
--   Matplotlib
-
-The core optimization algorithms do not require Scikit-learn.
-
-## 23. Installation
-
-Verify Python:
+### Clone the repository
 
 ``` bash
-python --version
+git clone https://github.com/suresh-vlsi/wafer_yield_simulator.git
 ```
 
-Install dependencies:
+Enter the project:
 
 ``` bash
-pip install numpy matplotlib
+cd wafer_yield_simulator
 ```
 
-## 24. Running the Experiments
+### Option 1: Open directly
 
-Open the project directory:
-
-``` powershell
-cd C:\Users\Lenovo\machine-learning-algorithms\01_linear_regression
-```
-
-Run individual experiments:
-
-``` powershell
-python linear_regression.py
-python loss_surface.py
-python loss_surface_3d.py
-python gradient_vector.py
-python gradient_check.py
-python learning_rate_experiment.py
-python hessian_analysis.py
-python stability_boundary.py
-python feature_scaling.py
-python parameter_trajectory.py
-python momentum_gradient_descent.py
-python momentum_beta_experiment.py
-python nesterov_momentum.py
-python adagrad.py
-python rmsprop.py
-python adam.py
-```
-
-## 25. Key Mathematical Results
-
-### Linear Regression
-
-\[ `\boxed{\hat y=b_0+b_1x}`{=tex} \]
-
-### MSE
-
-\[ `\boxed{
-J=
-\frac{1}{n}
-\sum_{i=1}^{n}
-(\hat y_i-y_i)^2
-}`{=tex} \]
-
-### Gradient Descent
-
-\[ `\boxed{
-\theta_{t+1}
-=
-\theta_t-\alpha\nabla J
-}`{=tex} \]
-
-### Numerical Gradient
-
-\[ `\boxed{
-\frac{\partial J}{\partial\theta}
-\approx
-\frac{
-J(\theta+\epsilon)-J(\theta-\epsilon)
-}{
-2\epsilon
-}
-}`{=tex} \]
-
-### Stability
-
-\[ `\boxed{
-0<\alpha<\frac{2}{\lambda_{max}}
-}`{=tex} \]
-
-### Momentum
-
-\[ `\boxed{
-v_t=\beta v_{t-1}-\alpha g_t
-}`{=tex} \]
-
-\[ `\boxed{
-\theta_{t+1}=\theta_t+v_t
-}`{=tex} \]
-
-### AdaGrad
-
-\[ `\boxed{
-G_t=G_{t-1}+g_t^2
-}`{=tex} \]
-
-### RMSProp
-
-\[ `\boxed{
-S_t=
-\beta S_{t-1}
-+
-(1-\beta)g_t^2
-}`{=tex} \]
-
-### Adam
-
-\[ `\boxed{
-m_t=
-\beta_1m_{t-1}
-+
-(1-\beta_1)g_t
-}`{=tex} \]
-
-\[ `\boxed{
-v_t=
-\beta_2v_{t-1}
-+
-(1-\beta_2)g_t^2
-}`{=tex} \]
-
-## 26. Important Observations
-
-### Gradient Direction
-
-\[ `\nabla `{=tex}J`\rightarrow`{=tex}`\text{uphill}`{=tex} \]
-
-\[ -`\nabla `{=tex}J`\rightarrow`{=tex}`\text{downhill}`{=tex} \]
-
-### Learning Rate
-
-A small learning rate may be slow; a large one can become unstable.
-
-### Hessian
-
-The Hessian describes local curvature. Its largest eigenvalue controls
-the most restrictive direction for Gradient Descent on a quadratic
-objective.
-
-### Feature Scaling
-
-Scaling can improve conditioning and make optimization more efficient.
-
-### Momentum
-
-Momentum adds historical velocity to the current update.
-
-### Nesterov
-
-Nesterov evaluates the gradient at a look-ahead position.
-
-### AdaGrad
-
-AdaGrad adapts learning rates using accumulated squared gradients.
-
-### RMSProp
-
-RMSProp uses a moving average so old gradients gradually lose influence.
-
-### Adam
-
-Adam combines first-moment and second-moment estimates with bias
-correction.
-
-## 27. What Was Implemented From Scratch
-
--   Linear Regression
--   Mean Squared Error
--   Analytical gradients
--   Numerical gradients
--   Gradient Descent
--   Loss tracking
--   Loss surface visualization
--   3D loss-surface visualization
--   Gradient vector visualization
--   Gradient checking
--   Learning-rate experiments
--   Hessian analysis
--   Eigenvalue analysis
--   Stability analysis
--   Feature scaling
--   Parameter trajectory tracking
--   Momentum
--   Momentum beta experiments
--   Nesterov Accelerated Gradient
--   AdaGrad
--   RMSProp
--   Adam
-
-## 28. Future Extensions
-
-### Optimization
-
--   Mini-batch Gradient Descent
--   Stochastic Gradient Descent
--   AdamW
--   Nadam
--   AMSGrad
--   Learning-rate scheduling
--   Cosine decay
--   Exponential decay
--   Warm-up schedules
-
-### Regression
-
--   Multiple Linear Regression
--   Polynomial Regression
--   Ridge Regression
--   Lasso Regression
--   Elastic Net
-
-### Machine Learning
-
--   Logistic Regression
--   Perceptron
--   k-Nearest Neighbors
--   Decision Trees
--   Support Vector Machines
--   Neural Networks
-
-## 29. Conclusion
-
-The project develops optimization progressively:
-
-\[ `\boxed{
-\text{Loss}
-\rightarrow
-\text{Gradient}
-\rightarrow
-\text{Gradient Descent}
-}`{=tex} \]
-
-then:
-
-\[ `\boxed{
-\text{Learning Rate}
-\rightarrow
-\text{Hessian}
-\rightarrow
-\text{Stability}
-}`{=tex} \]
-
-then:
-
-\[ `\boxed{
-\text{Feature Scaling}
-\rightarrow
-\text{Momentum}
-\rightarrow
-\text{Nesterov}
-}`{=tex} \]
-
-and finally:
-
-\[ `\boxed{
-\text{AdaGrad}
-\rightarrow
-\text{RMSProp}
-\rightarrow
-\text{Adam}
-}`{=tex} \]
-
-The central objective is not merely to obtain a regression line, but to
-understand **why optimization algorithms move the way they do** and to
-connect the mathematics directly to executable Python experiments.
-
-## Optimization Section Completed
+Open:
 
 ``` text
-✓ Linear Regression
-✓ MSE
-✓ Gradient
-✓ Gradient Descent
-✓ Loss Curves
-✓ Loss Surfaces
-✓ Gradient Geometry
-✓ Gradient Checking
-✓ Learning Rate
-✓ Hessian
-✓ Eigenvalues
-✓ Stability Boundary
-✓ Feature Scaling
-✓ Parameter Trajectory
-✓ Momentum
-✓ Momentum Beta
-✓ Nesterov
-✓ AdaGrad
-✓ RMSProp
-✓ Adam
+index.html
 ```
 
-**End of Optimization.**
+in a modern web browser.
+
+### Option 2: VS Code
+
+Open the project folder in VS Code:
+
+``` bash
+code .
+```
+
+Then open `index.html`.
+
+A local web-server extension such as Live Server can also be used during
+development.
+
+### Option 3: Python HTTP server
+
+If Python is installed:
+
+``` bash
+python -m http.server 8000
+```
+
+Then open:
+
+``` text
+http://localhost:8000
+```
+
+------------------------------------------------------------------------
+
+## Technologies
+
+| Technology | Purpose                    |
+|------------|----------------------------|
+| HTML5      | Web interface              |
+| CSS3       | Styling and layout         |
+| JavaScript | Simulation and interaction |
+| CSV        | Test/bin data              |
+| Git        | Version control            |
+| GitHub     | Source-code hosting        |
+
+------------------------------------------------------------------------
+
+## Educational Objectives
+
+This project demonstrates concepts related to:
+
+1.  Semiconductor manufacturing
+2.  Wafer and die organization
+3.  IC testing
+4.  Pass/fail binning
+5.  Yield calculation
+6.  Defect-oriented simulation
+7.  Data-driven visualization
+8.  Interactive JavaScript applications
+9.  Engineering dashboards
+10. Git/GitHub project development
+
+------------------------------------------------------------------------
+
+## Possible Extensions
+
+The simulator can be expanded with more advanced semiconductor models.
+
+### Defect Density
+
+Allow the user to vary:
+
+\[ D_0 = \]
+
+and observe its effect on yield.
+
+### Statistical Yield Models
+
+Potential additions include:
+
+- Poisson yield model
+- Murphy yield model
+- Negative-binomial yield model
+- Clustered-defect models
+- Monte Carlo simulation
+
+### Advanced Analysis
+
+Future versions could include:
+
+- Yield versus defect-density plots
+- Yield versus die-area plots
+- Multiple-wafer comparison
+- Yield distributions
+- Mean and standard deviation
+- Confidence intervals
+- Defect-density sweeps
+- Die-area sweeps
+
+### Advanced Visualization
+
+Potential additions:
+
+- Wafer heat maps
+- Defect maps
+- Bin distributions
+- Yield trend charts
+- Process comparison dashboards
+
+------------------------------------------------------------------------
+
+## Limitations
+
+This is a **simplified educational simulator**.
+
+It does not attempt to reproduce a complete semiconductor manufacturing
+line or a production-grade yield-analysis system.
+
+Real manufacturing yield analysis can require process-specific data and
+models for:
+
+- Random defects
+- Systematic defects
+- Spatial correlations
+- Critical-area effects
+- Parametric failures
+- Process variation
+- Test coverage
+- Manufacturing process conditions
+
+------------------------------------------------------------------------
+
+## Use Cases
+
+The project can be used for:
+
+- VLSI coursework
+- Semiconductor engineering learning
+- IC testing demonstrations
+- Yield-analysis demonstrations
+- Digital VLSI portfolios
+- Academic presentations
+- Semiconductor interview preparation
+- Interactive engineering visualization
+
+------------------------------------------------------------------------
+
+## GitHub Repository
+
+Repository:
+
+**suresh-vlsi/wafer_yield_simulator**
+
+https://github.com/suresh-vlsi/wafer_yield_simulator
+
+------------------------------------------------------------------------
+
+## Author
+
+**Suresh Kumar**
+
+M.Tech — Systems & Control Engineering, IIT Bombay
+
+Areas of interest:
+
+- VLSI Design
+- RTL Design
+- ASIC Verification
+- Digital VLSI
+- Semiconductor Manufacturing
+- Hardware Design
+- Formal Verification
+
+------------------------------------------------------------------------
+
+## License
+
+No open-source license has been selected for the repository unless one
+is explicitly added.
+
+If the project is later intended for unrestricted reuse, an open-source
+license such as MIT can be added.
+
+------------------------------------------------------------------------
+
+## Version
+
+**Complete Wafer Yield Simulator**
+
+Current documented functionality:
+
+- Interactive wafer/die visualization
+- Die-level testing
+- Yield tracking
+- Automatic test sequencing
+- Tester velocity control
+- CSV-based test/bin data
+- Browser-based interface
