@@ -1,5 +1,9 @@
 # Wafer Yield Simulator
 
+## 🚀 Live Demo
+
+**[Launch Wafer Yield Simulator →](https://suresh-vlsi.github.io/wafer_yield_simulator/)**
+
 An interactive web-based **semiconductor wafer yield simulator** for
 visualizing wafer-level die testing, pass/fail classification, yield
 calculation, test sequencing, and tester-speed control.
