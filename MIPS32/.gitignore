@@ -1,0 +1,14 @@
+# Simulation outputs
+sim/*.vvp
+sim/*.vcd
+*.vvp
+*.vcd
+
+# GTKWave
+*.gtkw
+
+# Editor / OS files
+.vscode/
+*.swp
+*~
+.DS_Store
